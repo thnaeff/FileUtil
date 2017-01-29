@@ -6,9 +6,27 @@ Utilities for the file system (path and file operations)
 
 
 [![License](http://img.shields.io/badge/License-Apache v2.0-802879.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
-
-
 [![Java Version](http://img.shields.io/badge/Java-1.6%2B-2E6CB8.svg)](https://java.com)
+[![Apache Maven ready](http://img.shields.io/badge/Apache Maven ready-3.3.9%2B-FF6804.svg)](https://maven.apache.org/)
+
+
+---
+
+
+Utilities
+
+* Path separator
+* File system root (C:\, /home/, ...)
+* Parent and child directory operations
+* Simple file writing
+* Deleting and copying of whole directories and their content
+* Zip archive creation
+
+
+
+
+
+
 
 
 ---

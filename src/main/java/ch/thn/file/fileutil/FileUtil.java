@@ -22,8 +22,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 
 /**
  * @author Thomas Naeff (github.com/thnaeff)
@@ -362,6 +369,150 @@ public class FileUtil {
     } catch (IOException e) {
       throw new FileUtilError("failed to close file stream");
     }
+  }
+
+
+  /**
+   * Deletes all files and subdirectories on the given path, including the <code>path</code>
+   * parameter directory. If <code>path</code> is just a file, only the file is deleted.
+   *
+   * @param path The path to delete
+   * @throws IOException When deleting of any directory or file on the path fails
+   */
+  public static void deleteAll(File path) throws IOException {
+
+    Files.walkFileTree(path.toPath(), new FileTreeWalker(FileTreeWalker.Action.DELETE));
+
+    if (path.exists() && !path.delete()) {
+      throw new IOException("Failed to delete directory or file " + path);
+    }
+
+  }
+
+  /**
+   * Copies all files and subdirectories on the given path, including the <code>path</code>
+   * parameter directory. If <code>path</code> is just a file, only the file is copied.
+   *
+   * @param source The source directory
+   * @param dest The destination directory
+   * @throws IOException When copying of any directory or file on the path fails
+   */
+  public static void copyAll(File source, File dest) throws IOException {
+
+    Files.walkFileTree(source.toPath(),
+        new FileTreeWalker(FileTreeWalker.Action.COPY, source.toPath(), dest.toPath()));
+
+  }
+
+  /************************************************************************************
+   * Some code from the copy example in:
+   * https://docs.oracle.com/javase/tutorial/essential/io/walk.html
+   *
+   *
+   * @author a5rn0zz
+   *
+   */
+  private static class FileTreeWalker extends SimpleFileVisitor<Path> {
+
+    private enum Action {
+      DELETE,
+      COPY;
+    }
+
+    private Action action = null;
+    private Path source = null;
+    private Path target = null;
+
+    /**
+     * A new file tree walker.
+     *
+     * @param action The {@link Action} to use this walker for
+     */
+    public FileTreeWalker(Action action) {
+      this(action, null, null);
+    }
+
+    /**
+     * A new file tree walker for copying.
+     *
+     * @param action The {@link Action} to use this walker for
+     * @param source The source directory
+     * @param target The target directory
+     */
+    public FileTreeWalker(Action action, Path source, Path target) {
+      this.action = action;
+      this.source = source;
+      this.target = target;
+
+    }
+
+    @Override
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+        throws IOException {
+
+      if (action == Action.COPY) {
+        Path newdir = target.resolve(source.relativize(dir));
+        try {
+          Files.copy(dir, newdir, StandardCopyOption.REPLACE_EXISTING);
+        } catch (FileAlreadyExistsException e) {
+          // ignore
+        } catch (IOException e) {
+          throw new IOException("Failed to create directory " + newdir, e);
+        }
+      }
+
+      return FileVisitResult.CONTINUE;
+    }
+
+    @Override
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+
+      if (action == Action.DELETE) {
+        if (!file.toFile().delete()) {
+          throw new IOException("Failed to delete directory or file " + file);
+        }
+
+        return FileVisitResult.CONTINUE;
+      } else if (action == Action.COPY) {
+
+        Path newdir = target.resolve(source.relativize(file));
+        Files.copy(file, newdir, StandardCopyOption.REPLACE_EXISTING);
+
+        if (!newdir.toFile().exists()) {
+          throw new IOException("Failed to copy directory or file " + file + " to " + newdir);
+        }
+
+        return FileVisitResult.CONTINUE;
+      }
+
+      return FileVisitResult.TERMINATE;
+    }
+
+    @Override
+    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+
+      if (action == Action.COPY) {
+        // fix up modification time of directory when done
+        if (exc == null) {
+          Path newdir = target.resolve(source.relativize(dir));
+          try {
+            FileTime time = Files.getLastModifiedTime(dir);
+            Files.setLastModifiedTime(newdir, time);
+          } catch (IOException e) {
+            throw new IOException("Unable to copy all attributes to " + newdir, e);
+          }
+        }
+      } else if (action == Action.DELETE) {
+        // Delete visited directory
+
+        if (!dir.toFile().delete()) {
+          throw new IOException("Failed to delete directory " + dir);
+        }
+      }
+
+      return FileVisitResult.CONTINUE;
+    }
+
   }
 
 }
