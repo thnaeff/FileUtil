@@ -46,7 +46,7 @@ pom.xml entry in your project:
 <dependency>
 	<groupId>ch.thn.file</groupId>
 	<artifactId>fileutil</artifactId>
-	<version>VERSION</vers>
+	<version>0.0.1-SNAPSHOT</vers>
 </dependency>
 ```
 
