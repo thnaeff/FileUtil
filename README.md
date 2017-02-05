@@ -17,9 +17,7 @@ Utilities
 
 * Path separator
 * File system root (C:\, /home/, ...)
-* Parent and child directory operations
-* Simple file writing
-* Deleting and copying of whole directories and their content
+* Deleting, copying and moving of whole directories and their content
 * Zip archive creation
 
 

@@ -1,36 +1,34 @@
 /**
- *    Copyright 2013 Thomas Naeff (github.com/thnaeff)
+ * Copyright 2017 Thomas Naeff (github.com/thnaeff)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  *
  */
 package ch.thn.file.fileutil;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.CopyOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Thomas Naeff (github.com/thnaeff)
@@ -40,10 +38,10 @@ public class FileUtil {
 
 
   /**
-   * Returns the separator which separates files/folders in a path (backslash "\"
-   * for windows, slash "/" for unix, ...)
+   * Returns the separator which separates files/folders in a path (backslash "\" for windows, slash
+   * "/" for unix, ...).
    *
-   * @return
+   * @return The file system path separator
    */
   public static String getPathSeparator() {
     return File.separator;
@@ -51,10 +49,10 @@ public class FileUtil {
 
   /**
    * Returns the available filesystem roots.<br />
-   * On an unix system this would return "/", whereas on a Windows system
-   * it returns "A:/", "C:/" etc. depending on the available drives.
+   * On an unix system this would return "/", whereas on a Windows system it returns "A:/", "C:/"
+   * etc. depending on the available drives.
    *
-   * @return
+   * @return An array with all file system roots
    * @see File#listRoots()
    */
   public static File[] getFileSystemRoots() {
@@ -62,12 +60,12 @@ public class FileUtil {
   }
 
   /**
-   * Checks the given path if it starts with any of the available file system
-   * roots.<br />
+   * Checks the given path if it starts with any of the available file system roots.<br />
    * For more information about file system roots, see {@link File#listRoots()}
    *
-   * @param path
-   * @return
+   * @param path The file system root to look for. Checks all file system roots if they start with
+   *        the given path
+   * @return Whether a file system root starts with the given path or not
    */
   public static boolean hasFileSystemRoot(String path) {
     File[] roots = File.listRoots();
@@ -81,13 +79,13 @@ public class FileUtil {
   }
 
   /**
-   * Adds the path separator to the end of the path if not there yet
+   * Adds the path separator to the end of the path if not there yet.
    *
    * @param path The path to check
    * @return The checked and, if necessary, corrected path
    */
   public static String addPathSeparator(String path) {
-    //Add path separator if not there
+    // Add path separator if not there
     if (path != null && !path.endsWith(File.separator)) {
       path = path + File.separator;
     }
@@ -98,14 +96,14 @@ public class FileUtil {
   /**
    * Returns the current working directory
    *
-   * @return
+   * @return The current working directory
    */
   public static String getWorkingDirectory() {
-    //Since System.getProperty("user.dir") and user.home etc. can be confusing
-    //and I haven't quite figured out if they really are reliable on all systems,
-    //I chose a little more complicated approach. This is exactly the same
-    //like if a file is created relatively, like new File("testfile.txt"), which
-    //would be relative to the working directory.
+    // Since System.getProperty("user.dir") and user.home etc. can be confusing
+    // and I haven't quite figured out if they really are reliable on all systems,
+    // I chose a little more complicated approach. This is exactly the same
+    // like if a file is created relatively, like new File("testfile.txt"), which
+    // would be relative to the working directory.
 
     File f = new File(".");
 
@@ -117,46 +115,15 @@ public class FileUtil {
   }
 
   /**
-   * Returns the parent path of the given path.<br />
-   * <br />
-   * Example:<br />
-   * /home/me/somefolder/ returns the path string /home/me/
-   *
-   * @param path
-   * @return
-   */
-  public static String getParentPath(String path) {
-    Path ret = Paths.get(path).getParent();
-
-    if (ret == null) {
-      return "";
-    } else {
-      return ret.toString();
-    }
-  }
-
-  /**
-   * Returns the file object of the parent path.<br />
-   * <br />
-   * Example:<br />
-   * /home/me/somefolder/ returns the file object for /home/me/
-   *
-   * @param file
-   * @return
-   */
-  public static File getParentFile(File file) {
-    return file.getParentFile();
-  }
-
-  /**
    * Returns the next existing parent directory of the given file.<br />
    * <br />
    * Example:<br />
    * /home/me/somefolder/file.test and "somefolder" does not exist, it returns /home/me/<br />
-   * /home/me/somefolder/file.test and "somefolder" does exist, it returns /home/me/somefolder/<br />
+   * /home/me/somefolder/file.test and "somefolder" does exist, it returns
+   * /home/me/somefolder/<br />
    *
-   * @param file
-   * @return
+   * @param file The file in whose path to look for the existing parent directory
+   * @return The parent directory
    */
   public static File getNextExistingParentDirectory(File file) {
 
@@ -169,238 +136,40 @@ public class FileUtil {
     return file;
   }
 
-  /**
-   * Returns the next existing parent directory of the given path.<br />
-   * <br />
-   * Example:<br />
-   * /home/me/somefolder/file.test and "somefolder" does not exist, it returns /home/me/<br />
-   * /home/me/somefolder/file.test and "somefolder" does exist, it returns /home/me/somefolder/<br />
-   *
-   * @param path
-   * @return
-   */
-  public static String getNextExistingParentDirectory(String path) {
-    return getNextExistingParentDirectory(new File(path)).getPath();
-  }
 
   /**
-   * Checks if the given parent file really is a parent of the base path. It only
-   * returns true if the parent file is a parent of the base path and does
-   * not return true if they are equal.<br />
-   * <br />
-   * Examples:<br />
-   * /home/me/ is a parent of /home/me/somefolder/<br />
-   * /home/me/Desktop/ is a parent of /home/me/Desktop/somestuff/morestuff/
+   * Deletes all files and sub-directories on the given path. The path can be a file or directory.
+   * If it is a file, only the file is deleted (if <code>includePath=true</code>).
    *
-   * @param parent
-   * @param base
-   * @return
-   */
-  public static boolean isParentOf(File parent, File base) {
-    if (parent == null || base == null) {
-      return false;
-    }
-
-    File baseTemp = base.getParentFile();
-
-    while (baseTemp != null) {
-      if (baseTemp.equals(parent)) {
-        //Parent path found in base path
-        return true;
-      }
-
-      baseTemp = baseTemp.getParentFile();
-    }
-
-    //Parent path not found in base path
-    return false;
-  }
-
-  /**
-   * Checks if the given parent file really is a parent of the base path. It only
-   * returns true if the parent file is a parent of the base path and does
-   * not return true if they are equal.<br />
-   * <br />
-   * Examples:<br />
-   * /home/me/ is a parent of /home/me/somefolder/<br />
-   * /home/me/Desktop/ is a parent of /home/me/Desktop/somestuff/morestuff/
-   *
-   * @param parent
-   * @param base
-   * @return
-   */
-  public static boolean isParentOf(String parent, String base) {
-    if (parent == null || base == null) {
-      return false;
-    }
-
-    return isParentOf(new File(parent), new File(base));
-  }
-
-  /**
-   * Checks if the given child path is really a child path of the given base
-   * path. If the base path is an existing file, directory of the file is used
-   * as base path.<br />
-   * <br />
-   * Examples:<br />
-   * /home/me/somefolder/ is a child of /home/me/<br />
-   * /home/me/Desktop/somestuff/morestuff/ is a child of /home/me/Desktop/<br />
-   * /home/me/Desk/top/ is not a child of /home/me/Desktop/<br />
-   * /home/me/Desktopabc/def/ is not a child of /home/me/Desktop/<br />
-   * /home/me/Desktop/abc/def/ is a child of /home/me/Desktop/<br />
-   *
-   * @param childPath
-   * @param base
-   * @return
-   */
-  private static boolean isChildOf(String childPath, File base) {
-    if (childPath == null || base == null) {
-      return false;
-    }
-
-    String basePath = null;
-
-    try {
-      basePath = base.getCanonicalPath();
-    } catch (IOException e) {
-      return false;
-    }
-
-    //It is not possible to be a child path of a file path, thus if it is
-    //a file then take its directory as base path
-    if (base.isFile()) {
-      int lastIndex = basePath.lastIndexOf(base.getName());
-      basePath = basePath.substring(0, lastIndex);
-    } else {
-      //Make sure it has a path separator at the end
-      basePath = addPathSeparator(basePath);
-    }
-
-    if (childPath.startsWith(basePath)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Checks if the given child path is really a child path of the given base
-   * path. If the base path is an existing file, directory of the file is used
-   * as base path.<br />
-   * <br />
-   * Examples:<br />
-   * /home/me/somefolder/ is a child of /home/me/<br />
-   * /home/me/Desktop/somestuff/morestuff/ is a child of /home/me/Desktop/<br />
-   * /home/me/Desk/top/ is not a child of /home/me/Desktop/<br />
-   * /home/me/Desktopabc/def/ is not a child of /home/me/Desktop/<br />
-   * /home/me/Desktop/abc/def/ is a child of /home/me/Desktop/<br />
-   *
-   * @param child
-   * @param base
-   * @return
-   */
-  public static boolean isChildOf(File child, File base) {
-    if (child == null) {
-      return false;
-    }
-
-    try {
-      return isChildOf(child.getCanonicalPath(), base);
-    } catch (IOException e) {
-      return false;
-    }
-  }
-
-  /**
-   * Checks if the given child path is really a child path of the given base
-   * path. If the base path is an existing file, directory of the file is used
-   * as base path.<br />
-   * <br />
-   * Examples:<br />
-   * /home/me/somefolder/ is a child of /home/me/<br />
-   * /home/me/Desktop/somestuff/morestuff/ is a child of /home/me/Desktop/<br />
-   * /home/me/Desk/top/ is not a child of /home/me/Desktop/<br />
-   * /home/me/Desktopabc/def/ is not a child of /home/me/Desktop/<br />
-   * /home/me/Desktop/abc/def/ is a child of /home/me/Desktop/<br />
-   *
-   * @param child
-   * @param base
-   * @return
-   */
-  public static boolean isChildOf(String child, String base) {
-    if (base == null) {
-      return false;
-    }
-
-    return isChildOf(child, new File(base));
-  }
-
-
-
-
-  /**
-   * A very simple way to write to a file.
-   * Uses a buffered stream writer to write to the file given with <code>filePath</code>.
-   *
-   * @param filePath
-   * @param string
-   */
-  public static void writeStringToFile(String filePath, StringBuilder string) {
-    Writer output = null;
-
-    try {
-      output = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filePath), "UTF-8"));
-    } catch (IOException e) {
-      throw new FileUtilError("Failed to open writer");
-    }
-
-    try {
-      output.write(string.toString());
-    } catch (IOException e1) {
-      try {
-        output.close();
-      } catch (IOException e) {}
-
-      throw new FileUtilError("Failed to write to file");
-    }
-
-    try {
-      output.close();
-    } catch (IOException e) {
-      throw new FileUtilError("failed to close file stream");
-    }
-  }
-
-
-  /**
-   * Deletes all files and subdirectories on the given path, including the <code>path</code>
-   * parameter directory. If <code>path</code> is just a file, only the file is deleted.
-   *
-   * @param path The path to delete
+   * @param path The path and all its sub-directories/files to delete
+   * @param includePath If set to <code>true</code>, the directory the given path points to is
+   *        deleted as well. If set to <code>false</code>, only files/directories within the path
+   *        are deleted
    * @throws IOException When deleting of any directory or file on the path fails
    */
-  public static void deleteAll(File path) throws IOException {
+  public static void deleteAll(File path, boolean includePath) throws IOException {
 
     Files.walkFileTree(path.toPath(), new FileTreeWalker(FileTreeWalker.Action.DELETE));
 
-    if (path.exists() && !path.delete()) {
+    if (includePath && path.exists() && !path.delete()) {
       throw new IOException("Failed to delete directory or file " + path);
     }
 
   }
 
   /**
-   * Copies all files and subdirectories on the given path, including the <code>path</code>
+   * Copies all files and sub-directories on the given path, including the <code>path</code>
    * parameter directory. If <code>path</code> is just a file, only the file is copied.
    *
    * @param source The source directory
    * @param dest The destination directory
+   * @param replaceExisting If set to <code>true</code>, existing files/directories are replaced
    * @throws IOException When copying of any directory or file on the path fails
    */
-  public static void copyAll(File source, File dest) throws IOException {
+  public static void copyAll(File source, File dest, boolean replaceExisting) throws IOException {
 
-    Files.walkFileTree(source.toPath(),
-        new FileTreeWalker(FileTreeWalker.Action.COPY, source.toPath(), dest.toPath()));
+    Files.walkFileTree(source.toPath(), new FileTreeWalker(FileTreeWalker.Action.COPY,
+        source.toPath(), dest.toPath(), replaceExisting));
 
   }
 
@@ -409,40 +178,55 @@ public class FileUtil {
    * https://docs.oracle.com/javase/tutorial/essential/io/walk.html
    *
    *
-   * @author a5rn0zz
+   * @author Thomas Naeff (github.com/thnaeff)
    *
    */
   private static class FileTreeWalker extends SimpleFileVisitor<Path> {
 
     private enum Action {
       DELETE,
-      COPY;
+      COPY,
+      MOVE;
     }
 
     private Action action = null;
     private Path source = null;
     private Path target = null;
+    private CopyOption[] copyMoveOptions = null;
 
     /**
-     * A new file tree walker.
+     * A new file tree walker for deleting.
      *
      * @param action The {@link Action} to use this walker for
      */
     public FileTreeWalker(Action action) {
-      this(action, null, null);
+      this(action, null, null, false);
     }
 
     /**
-     * A new file tree walker for copying.
+     * A new file tree walker for copying or moving.
      *
      * @param action The {@link Action} to use this walker for
      * @param source The source directory
      * @param target The target directory
+     * @param replaceExisting If set to <code>true</code>, existing files/directories are replaced
      */
-    public FileTreeWalker(Action action, Path source, Path target) {
+    public FileTreeWalker(Action action, Path source, Path target, boolean replaceExisting) {
       this.action = action;
       this.source = source;
       this.target = target;
+
+      if (action == Action.COPY || action == Action.MOVE) {
+        List<CopyOption> copyMoveOptionsTemp = new ArrayList<CopyOption>();
+        copyMoveOptionsTemp.add(LinkOption.NOFOLLOW_LINKS);
+        copyMoveOptionsTemp.add(StandardCopyOption.ATOMIC_MOVE);
+
+        if (replaceExisting) {
+          copyMoveOptionsTemp.add(StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        copyMoveOptions = copyMoveOptionsTemp.toArray(new CopyOption[copyMoveOptionsTemp.size()]);
+      }
 
     }
 
@@ -450,15 +234,8 @@ public class FileUtil {
     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
         throws IOException {
 
-      if (action == Action.COPY) {
-        Path newdir = target.resolve(source.relativize(dir));
-        try {
-          Files.copy(dir, newdir, StandardCopyOption.REPLACE_EXISTING);
-        } catch (FileAlreadyExistsException e) {
-          // ignore
-        } catch (IOException e) {
-          throw new IOException("Failed to create directory " + newdir, e);
-        }
+      if (action == Action.COPY || action == Action.MOVE) {
+        copyOrMove(action, dir);
       }
 
       return FileVisitResult.CONTINUE;
@@ -473,14 +250,9 @@ public class FileUtil {
         }
 
         return FileVisitResult.CONTINUE;
-      } else if (action == Action.COPY) {
+      } else if (action == Action.COPY || action == Action.MOVE) {
 
-        Path newdir = target.resolve(source.relativize(file));
-        Files.copy(file, newdir, StandardCopyOption.REPLACE_EXISTING);
-
-        if (!newdir.toFile().exists()) {
-          throw new IOException("Failed to copy directory or file " + file + " to " + newdir);
-        }
+        copyOrMove(action, file);
 
         return FileVisitResult.CONTINUE;
       }
@@ -491,7 +263,7 @@ public class FileUtil {
     @Override
     public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
 
-      if (action == Action.COPY) {
+      if (action == Action.COPY || action == Action.MOVE) {
         // fix up modification time of directory when done
         if (exc == null) {
           Path newdir = target.resolve(source.relativize(dir));
@@ -511,6 +283,35 @@ public class FileUtil {
       }
 
       return FileVisitResult.CONTINUE;
+    }
+
+    /**
+     * Copies or moves a directory or file. Retries if atomic operation does not work and if atomic
+     * operation fails, the option is taken out of the list.
+     *
+     * @param action The copy or move action
+     * @param dir The directory to copy
+     * @throws IOException If copying or moving failed
+     */
+    private void copyOrMove(Action action, Path dir) throws IOException {
+
+      try {
+        if (action == Action.COPY) {
+          Path newdir = target.resolve(source.relativize(dir));
+          Files.copy(dir, newdir, copyMoveOptions);
+        } else if (action == Action.MOVE) {
+          Path newdir = target.resolve(source.relativize(dir));
+          Files.move(dir, newdir, copyMoveOptions);
+        }
+      } catch (AtomicMoveNotSupportedException e) {
+        // Remove the atomic move from the list and try again
+        List<CopyOption> optionsTemp = Arrays.asList(copyMoveOptions);
+        optionsTemp.remove(StandardCopyOption.ATOMIC_MOVE);
+        copyMoveOptions = optionsTemp.toArray(new CopyOption[optionsTemp.size()]);
+
+        copyOrMove(action, dir);
+      }
+
     }
 
   }
